@@ -13,7 +13,7 @@ const ICTC_URL = 'http://ictc.hs/login';
 request(ICTC_URL, function (error, response, body) {
     if(error)
         console.error('Unable to connect to ictc.hs:', error); // Print the error if one occurred
-
+    const $ = CheerIO.load(body);
     const hMd5Pos = body.indexOf("hexMD5");
     const hMd5EndPost = body.indexOf("');", hMd5Pos);
     const passwordPadding = body.substring(hMd5Pos+7,hMd5EndPost+1);
@@ -29,8 +29,19 @@ request(ICTC_URL, function (error, response, body) {
         password: hashedPassword,
         dst:'',
         popup: true
-    }
+    };
 
+    const chapChallenge = $("input[name='chap-challenge']")[0];
+    const chapId = $("input[name='chap-id']")[0];
+
+    if(chapChallenge){
+        // console.log("There is a chap challenge now ...")
+        // postParams['chap-challenge'] = eval(`unescape("${chapChallenge.attribs.value}")`);
+        // postParams['chap-id'] = eval(`unescape("${chapId.attribs.value}")`);
+
+        postParams['chap-challenge'] = chapChallenge.attribs.value;
+        postParams['chap-id'] = chapId.attribs.value;
+    }
 
     request.post({url: ICTC_URL , form: postParams}, (err,httpResponse,body)=>{
         if(body.includes("خروج از شبکه")){
@@ -38,6 +49,7 @@ request(ICTC_URL, function (error, response, body) {
         }else{
             console.log("Ooops :(");
             console.log(err);
+            // console.log(body);
         }
     })
 });
